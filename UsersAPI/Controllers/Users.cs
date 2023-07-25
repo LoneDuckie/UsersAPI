@@ -50,12 +50,20 @@ namespace UsersAPI.Controllers
                 return "No user found with this ID!!";
         }
 
-        
+        public string HashPassword(string Password)
+        {
+            var sha = SHA256.Create();
+            var asByteArray = Encoding.Default.GetBytes(Password);
+            var hashedPassword = sha.ComputeHash(asByteArray);
+            return Convert.ToBase64String(hashedPassword);
+        }
+
         // POST api/<Users>
-        //used for adding a new user
+        //used for adding a new user       
         [HttpPost]
         public string Post(string Username,string FirstName,string LastName, string Email, string Password)
         {
+            
             SqlCommand cmd = new SqlCommand($"INSERT into Users(Username, FirstName, LastName, Email, Password) VALUES('{Username}', '{FirstName}', '{LastName}', '{Email}', '{Password}')", connection);
             connection.Open();
             int i = cmd.ExecuteNonQuery();
