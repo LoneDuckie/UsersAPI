@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
 using Newtonsoft.Json;
+using System.Security.Cryptography;
+using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -39,7 +41,7 @@ namespace UsersAPI.Controllers
         [HttpGet("{id}")]
         public string Get(int id)
         {
-            SqlDataAdapter da = new SqlDataAdapter("Select * FROM Users WHERE id = '"+id+"' ", connection);
+            SqlDataAdapter da = new SqlDataAdapter($"Select * FROM Users WHERE id = '{id}' ", connection);
             DataTable dt = new DataTable();
             da.Fill(dt);
             if (dt.Rows.Count > 0)
@@ -50,25 +52,16 @@ namespace UsersAPI.Controllers
                 return "No user found with this ID!!";
         }
 
-        public string HashPassword(string Password)
-        {
-            var sha = SHA256.Create();
-            var asByteArray = Encoding.Default.GetBytes(Password);
-            var hashedPassword = sha.ComputeHash(asByteArray);
-            return Convert.ToBase64String(hashedPassword);
-        }
-
         // POST api/<Users>
         //used for adding a new user       
         [HttpPost]
         public string Post(string Username,string FirstName,string LastName, string Email, string Password)
         {
-            
             SqlCommand cmd = new SqlCommand($"INSERT into Users(Username, FirstName, LastName, Email, Password) VALUES('{Username}', '{FirstName}', '{LastName}', '{Email}', '{Password}')", connection);
             connection.Open();
-            int i = cmd.ExecuteNonQuery();
+            int command = cmd.ExecuteNonQuery();
             connection.Close();
-            if(i == 1)
+            if(command == 1)
             {
                 return $"Record inserted with the values: Username: {Username}, FirstName: {FirstName}, Lastname: {LastName}, Email: {Email}, Password: {Password} ";
             }
@@ -83,10 +76,20 @@ namespace UsersAPI.Controllers
         //not started
         //used for updating the records
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public string Put(int id, string Username, string FirstName, string LastName, string Email, string Password)
         {
-            
-            
+            SqlCommand cmd = new SqlCommand($"UPDATE Users SET Username = '{Username}', FirstName = '{FirstName}', LastName = '{LastName}', Email = '{Email}', Password = '{Password}' WHERE UserID = '{id}' ", connection);
+            connection.Open();
+            int command = cmd.ExecuteNonQuery();
+            connection.Close();
+            if (command == 1)
+            {
+                return $"Record with ID {id} has updated with the values: Username: {Username}, FirstName: {FirstName}, Lastname: {LastName}, Email: {Email}, Password: {Password} ";
+            }
+            else
+            {
+                return "The record could not be updated!";
+            }
         }
 
         // DELETE api/<Users>/5
@@ -94,19 +97,20 @@ namespace UsersAPI.Controllers
         [HttpDelete("{id}")]
         public string Delete(int id)
         {
-            SqlCommand cmd = new SqlCommand("DELETE FROM Users WHERE UserID = '" + id + "' ", connection);
+            SqlCommand cmd = new SqlCommand($"DELETE FROM Users WHERE UserID = '{id}' ", connection);
             connection.Open();
-            int i = cmd.ExecuteNonQuery();
+            int command = cmd.ExecuteNonQuery();
             connection.Close();
-            if (i == 1)
+            if (command == 1)
             {
-                return "Record with id " + id + " has been deleted";
+                return $"Record with ID {id} has been deleted";
             }
             else
             {
                 return "No data deleted";
             }
         }
+       
     }
 }
 
